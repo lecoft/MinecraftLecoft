@@ -12,11 +12,16 @@ import java.awt.AWTEvent;
 import java.util.Enumeration;
 import com.sun.j3d.utils.behaviors.keyboard.*;
 import com.sun.j3d.utils.image.TextureLoader;
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
+import static java.awt.Frame.MAXIMIZED_BOTH;
+import javax.swing.*;
 
-public class BackgroundApp implements Runnable {
-
+public class Minecraft implements Runnable, ActionListener {
+    
+    private JProgressBar vida;
+    private JLabel jugador;
+    private JButton menu,close;
+    private JPanel infoJugador,PanelMenu;
+       
     Shape3D createLand() {
         LineArray landGeom = new LineArray(44, GeometryArray.COORDINATES | GeometryArray.COLOR_3);
         float l = -50.0f;
@@ -38,7 +43,7 @@ public class BackgroundApp implements Runnable {
     }
 
     public BranchGroup createSceneGraph(SimpleUniverse su) {
-        // Create the root of the branch graph
+
         BranchGroup objRootBG = new BranchGroup();
 
         Vector3f translate = new Vector3f();
@@ -63,8 +68,7 @@ public class BackgroundApp implements Runnable {
         objRootBG.addChild(keyNavBeh);
 
         Background background = new Background();
-        background.setApplicationBounds(new BoundingSphere(new Point3d(),
-                1000.0));
+        background.setApplicationBounds(new BoundingSphere(new Point3d(),1000.0));
         background.setGeometry(createBackGraph());
         objRoot.addChild(background);
 
@@ -73,70 +77,95 @@ public class BackgroundApp implements Runnable {
         objRootBG.addChild(ambientLight);
 
         return objRootBG;
-    } // end of CreateSceneGraph method
+    }
 
-  /////////////////////////////////////////////////////////
     public BranchGroup createBackGraph() {
 
         // Create the root of the branch graph
         BranchGroup objRoot = new BranchGroup();
-
-      
-     
-        
+       
         int[] stripCount = {10};
-        LineStripArray montana = new LineStripArray(10,
-                LineStripArray.COORDINATES, stripCount);
+        LineStripArray montana = new LineStripArray(10,LineStripArray.COORDINATES, stripCount);
         montana.setCoordinate(0, new Point3f(0.05f, 0.03f, 0.20f));
         montana.setCoordinate(1, new Point3f(0.1f, 0.0f, 0.20f));
         montana.setCoordinate(2, new Point3f(0.02f, 0.0f, 0.20f));
         montana.setCoordinate(3, new Point3f(0.05f, 0.03f, 0.20f));
         
-        Appearance apmon = new Appearance();
+        /*Appearance apmon = new Appearance();
         TextureLoader tex=new TextureLoader("mm.jpeg", null);
 	apmon.setTexture(tex.getTexture());
         Shape3D mount = new Shape3D(montana,apmon);
         
                
-        objRoot.addChild(mount);
+        objRoot.addChild(mount);*/
 
         objRoot.compile();
         return objRoot;
-    } // end of CreateBackGraph method
-
-    /////////////////////BackgroundApp//////////////////////
-    public BackgroundApp() {
+    } 
+    
+    public Minecraft() {
+        vida = new JProgressBar();
+        vida.setValue(100);
+        jugador = new JLabel("Nombre_Jugador");
+        menu = new JButton("<<");
+        close = new JButton("X");
+        menu.addActionListener(this);
+        close.addActionListener(this);
+        // p1.setPreferredSize(new Dimension(250,150));
+        infoJugador = new JPanel(new BorderLayout());
+        infoJugador.setOpaque(false);
+        JPanel estadisticas = new JPanel(new FlowLayout());
+        JPanel botones = new JPanel(new FlowLayout());
+        estadisticas.add(jugador);
+        estadisticas.add(vida);
+        infoJugador.add(estadisticas,BorderLayout.LINE_START);
+        botones.add(menu);
+        botones.add(close);       
+        infoJugador.add(botones,BorderLayout.LINE_END);
+      
+        PanelMenu = new JPanel(new FlowLayout());
+        PanelMenu.setVisible(false);
+        
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
         Canvas3D canvas3D = new Canvas3D(config);
         canvas3D.setStereoEnable(false);
 
-        // SimpleUniverse is a Convenience Utility class
         SimpleUniverse simpleU = new SimpleUniverse(canvas3D);
 
         BranchGroup scene = createSceneGraph(simpleU);
 
-    // This will move the ViewPlatform back a bit so the
-        // objects in the scene can be viewed.
         simpleU.getViewingPlatform().setNominalViewingTransform();
 
         simpleU.addBranchGraph(scene);
         new OtherView(simpleU.getLocale()); /* see note below */
 
-        JFrame f = new JFrame("Planetario");
+        JFrame f = new JFrame("Minecraft");
+        f.setUndecorated(true);
         f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        f.add(canvas3D);
+        f.setExtendedState(MAXIMIZED_BOTH);
+        f.add(PanelMenu, BorderLayout.EAST);
+        f.add(infoJugador, BorderLayout.NORTH);
+        f.add(canvas3D, BorderLayout.CENTER);
         f.pack();
         f.setVisible(true);
-        f.setSize(300,300);
-    } // end of BackgroundApp (constructor)
+    }
 
-    /*
-     * This class was created to make the boundingleaf work for this example
-     * program. One OtherView object is created just a couple of lines above.
-     * Inserting a second frame in the scene makes the BoundingLeaf object work
-     * as desired.
-     */
+   
+    public void actionPerformed(ActionEvent e) {
+      JButton b = (JButton) e.getSource();
+      if(b == close){
+           System.exit(0); 
+      }
+      else if(b == menu){
+          if(PanelMenu.isVisible())
+            PanelMenu.setVisible(false);
+          else
+            PanelMenu.setVisible(true);
+      }
+        
+    }
+
     public class OtherView extends Object {
 
         public TransformGroup vpTrans;
@@ -161,16 +190,13 @@ public class BackgroundApp implements Runnable {
             view.attachViewPlatform(vp);
             locale.addBranchGraph(vpRoot);
         }
-    } // end of OtherView class
+    } 
 
-  //  The following allows this to be run as an application
-    //  as well as an applet
     public void run() {
 
     }
-
     public static void main(String[] args) {
-        new BackgroundApp();
-    } // end of main (method of BackgroundApp)
+        new Minecraft();
+    } 
 
-} // end of class BackgroundApp
+} 
