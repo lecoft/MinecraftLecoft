@@ -125,11 +125,19 @@ public class Minecraft implements Runnable, ActionListener {
       
         PanelMenu = new JPanel(new FlowLayout());
         PanelMenu.setVisible(false);
+        PanelMenu.setSize(200, 700);
+        PanelMenu.setLocation(800, 20);
         
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
         Canvas3D canvas3D = new Canvas3D(config);
         canvas3D.setStereoEnable(false);
+        
+        JPanel game=new JPanel();
+        game.setSize(800,700);
+        game.setLocation(10, 10);
+        game.setVisible(true);
+        game.setLayout(new BorderLayout());
 
         SimpleUniverse simpleU = new SimpleUniverse(canvas3D);
 
@@ -139,14 +147,18 @@ public class Minecraft implements Runnable, ActionListener {
 
         simpleU.addBranchGraph(scene);
         new OtherView(simpleU.getLocale()); /* see note below */
+        game.add(canvas3D);
 
         JFrame f = new JFrame("Minecraft");
+        
+        JLayeredPane lp=f.getLayeredPane();
+        
         f.setUndecorated(true);
         f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         f.setExtendedState(MAXIMIZED_BOTH);
-        f.add(PanelMenu, BorderLayout.EAST);
+        lp.add(PanelMenu, 1);
         f.add(infoJugador, BorderLayout.NORTH);
-        f.add(canvas3D, BorderLayout.CENTER);
+        f.add(game);
         f.pack();
         f.setVisible(true);
     }
