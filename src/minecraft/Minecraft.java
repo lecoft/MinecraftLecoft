@@ -124,20 +124,17 @@ public class Minecraft implements Runnable, ActionListener {
         infoJugador.add(botones,BorderLayout.LINE_END);
       
         PanelMenu = new JPanel(new FlowLayout());
-        PanelMenu.setVisible(false);
-        PanelMenu.setSize(200, 700);
-        PanelMenu.setLocation(800, 20);
-        
+        PanelMenu.setVisible(true);
+
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
         Canvas3D canvas3D = new Canvas3D(config);
         canvas3D.setStereoEnable(false);
         
         JPanel game=new JPanel();
-        game.setSize(800,700);
-        game.setLocation(10, 10);
         game.setVisible(true);
-        game.setLayout(new BorderLayout());
+        game.setLayout(new GridBagLayout());
+        GridBagConstraints c=new GridBagConstraints();
 
         SimpleUniverse simpleU = new SimpleUniverse(canvas3D);
 
@@ -147,7 +144,19 @@ public class Minecraft implements Runnable, ActionListener {
 
         simpleU.addBranchGraph(scene);
         new OtherView(simpleU.getLocale()); /* see note below */
-        game.add(canvas3D);
+        
+        c.fill=GridBagConstraints.HORIZONTAL;
+        c.weightx=1;
+        c.weighty=0;
+        c.gridx=0;
+        c.gridy=0;
+        game.add(infoJugador,c);
+        
+        c.fill=GridBagConstraints.BOTH;
+        c.weighty=1;
+        c.gridx=0;
+        c.gridy=1;
+        game.add(canvas3D,c);
 
         JFrame f = new JFrame("Minecraft");
         
@@ -155,12 +164,17 @@ public class Minecraft implements Runnable, ActionListener {
         
         f.setUndecorated(true);
         f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        f.setExtendedState(MAXIMIZED_BOTH);
-        lp.add(PanelMenu, 1);
-        f.add(infoJugador, BorderLayout.NORTH);
-        f.add(game);
+        f.setExtendedState(MAXIMIZED_BOTH); 
         f.pack();
         f.setVisible(true);
+        
+        game.setSize(f.getSize());
+        lp.add(game,0);
+        lp.add(PanelMenu, 1);
+        PanelMenu.setSize(200, 700);
+        PanelMenu.setLocation(500, 20);
+        PanelMenu.setBackground(Color.yellow);
+        
     }
 
    
