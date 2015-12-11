@@ -20,7 +20,7 @@ public class Minecraft implements Runnable, ActionListener {
     private JProgressBar vida;
     private JLabel jugador;
     private JButton menu,close;
-    private JPanel infoJugador,PanelMenu;
+    private JPanel infoJugador,PanelMenu, game;
        
     Shape3D createLand() {
         LineArray landGeom = new LineArray(44, GeometryArray.COORDINATES | GeometryArray.COLOR_3);
@@ -123,15 +123,16 @@ public class Minecraft implements Runnable, ActionListener {
         botones.add(close);       
         infoJugador.add(botones,BorderLayout.LINE_END);
       
-        PanelMenu = new JPanel(new FlowLayout());
-        PanelMenu.setVisible(true);
-
+        PanelMenu = new JPanel();
+        PanelMenu.setVisible(false);
+        PanelMenu.setBackground(Color.yellow);
+        
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
         Canvas3D canvas3D = new Canvas3D(config);
         canvas3D.setStereoEnable(false);
         
-        JPanel game=new JPanel();
+        game=new JPanel();
         game.setVisible(true);
         game.setLayout(new GridBagLayout());
         GridBagConstraints c=new GridBagConstraints();
@@ -157,7 +158,7 @@ public class Minecraft implements Runnable, ActionListener {
         c.gridx=0;
         c.gridy=1;
         game.add(canvas3D,c);
-
+        
         JFrame f = new JFrame("Minecraft");
         
         JLayeredPane lp=f.getLayeredPane();
@@ -169,12 +170,11 @@ public class Minecraft implements Runnable, ActionListener {
         f.setVisible(true);
         
         game.setSize(f.getSize());
-        lp.add(game,0);
-        lp.add(PanelMenu, 1);
-        PanelMenu.setSize(200, 700);
-        PanelMenu.setLocation(500, 20);
-        PanelMenu.setBackground(Color.yellow);
+        PanelMenu.setSize((int)f.getSize().getWidth()/5,(int)((f.getSize().getHeight()*5)/6));
+        PanelMenu.setLocation((int)(f.getSize().getWidth()/5)*4, (int)((f.getSize().getHeight()/6)));
         
+        lp.add(game,new Integer(1));
+        lp.add(PanelMenu, new Integer(2));        
     }
 
    
