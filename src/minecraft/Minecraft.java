@@ -1,19 +1,20 @@
 package minecraft;
 
+import com.sun.j3d.utils.applet.*;
+import com.sun.j3d.utils.behaviors.keyboard.*;
+import com.sun.j3d.utils.geometry.*;
+import com.sun.j3d.utils.image.TextureLoader;
+import com.sun.j3d.utils.universe.*;
 import java.applet.Applet;
 import java.awt.*;
-import java.awt.event.*;
-import com.sun.j3d.utils.applet.*;
-import com.sun.j3d.utils.universe.*;
-import com.sun.j3d.utils.geometry.*;
-import javax.media.j3d.*;
-import javax.vecmath.*;
 import java.awt.AWTEvent;
-import java.util.Enumeration;
-import com.sun.j3d.utils.behaviors.keyboard.*;
-import com.sun.j3d.utils.image.TextureLoader;
 import static java.awt.Frame.MAXIMIZED_BOTH;
+import java.awt.event.*;
+import java.util.Enumeration;
+import javax.media.j3d.*;
 import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.vecmath.*;
 
 public class Minecraft implements Runnable, ActionListener {
     
@@ -122,10 +123,17 @@ public class Minecraft implements Runnable, ActionListener {
         botones.add(menu);
         botones.add(close);       
         infoJugador.add(botones,BorderLayout.LINE_END);
-      
-        PanelMenu = new JPanel();
+        JButton b1=new JButton("B1");
+        JButton b2=new JButton("B2");
+        JButton b3=new JButton("B3");
+        JButton b4=new JButton("B4");
+        JButton b5=new JButton("B5");
+        
+        
+        PanelMenu = new JPanel(new GridBagLayout());
         PanelMenu.setVisible(false);
-        PanelMenu.setBackground(Color.yellow);
+        
+        JPanel blocksGrid=new JPanel(new GridLayout(3,3));
         
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
@@ -146,6 +154,12 @@ public class Minecraft implements Runnable, ActionListener {
         simpleU.addBranchGraph(scene);
         new OtherView(simpleU.getLocale()); /* see note below */
         
+        blocksGrid.add(b1);
+        blocksGrid.add(b2);
+        blocksGrid.add(b3);
+        blocksGrid.add(b4);
+        blocksGrid.add(b5);
+        
         c.fill=GridBagConstraints.HORIZONTAL;
         c.weightx=1;
         c.weighty=0;
@@ -159,6 +173,14 @@ public class Minecraft implements Runnable, ActionListener {
         c.gridy=1;
         game.add(canvas3D,c);
         
+        c.fill=GridBagConstraints.NONE;
+        c.weightx=1;
+        c.weighty=1;
+        c.gridx=0;
+        c.gridy=0;
+        PanelMenu.add(blocksGrid,c);
+        
+        
         JFrame f = new JFrame("Minecraft");
         
         JLayeredPane lp=f.getLayeredPane();
@@ -171,7 +193,7 @@ public class Minecraft implements Runnable, ActionListener {
         
         game.setSize(f.getSize());
         PanelMenu.setSize((int)f.getSize().getWidth()/5,(int)((f.getSize().getHeight()*5)/6));
-        PanelMenu.setLocation((int)(f.getSize().getWidth()/5)*4, (int)((f.getSize().getHeight()/6)));
+        PanelMenu.setLocation((int)(f.getSize().getWidth()/5)*4, (int)((f.getSize().getHeight()/15)));
         
         lp.add(game,new Integer(1));
         lp.add(PanelMenu, new Integer(2));        
@@ -222,6 +244,16 @@ public class Minecraft implements Runnable, ActionListener {
 
     }
     public static void main(String[] args) {
+        try {
+            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // If Nimbus is not available, you can set the GUI to another look and feel.
+        }
         new Minecraft();
     } 
 
