@@ -10,8 +10,12 @@ import java.awt.*;
 import java.awt.AWTEvent;
 import static java.awt.Frame.MAXIMIZED_BOTH;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import javax.imageio.ImageIO;
 import javax.media.j3d.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -263,7 +267,7 @@ public class Minecraft implements Runnable, ActionListener {
           for (int i = 0; i < 15; i++) {
               for (int j = 0; j < 15; j++) {
                   if(b==botonesArreglo[i][j]){
-                      coordenadasOcupadas[i][j][js.getValue()]=true;
+                      coordenadasOcupadas[i][j][js.getValue()+10]=true;
                       insertar(j-8,i-8);
                   }
               }
@@ -312,7 +316,23 @@ public class Minecraft implements Runnable, ActionListener {
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		
 		Appearance ap = new Appearance();
-		
+		ap.setCapability(Appearance.ALLOW_TEXTURE_WRITE);
+                TextureCubeMap textura=new TextureCubeMap(Texture.BASE_LEVEL,Texture.INTENSITY,16);
+                BufferedImage img = null;
+                try {
+                    img = ImageIO.read(new File("brick.png"));
+                } catch (IOException e) {
+                }
+                ImageComponent2D ic=new ImageComponent2D(ImageComponent.FORMAT_RGB,img);
+                textura.setImage(0, TextureCubeMap.POSITIVE_X, ic);
+                textura.setImage(0, TextureCubeMap.POSITIVE_Y, ic);
+                textura.setImage(0, TextureCubeMap.POSITIVE_Z, ic);
+                textura.setImage(0, TextureCubeMap.NEGATIVE_X, ic);
+                textura.setImage(0, TextureCubeMap.NEGATIVE_Y, ic);
+                textura.setImage(0, TextureCubeMap.NEGATIVE_Z, ic);
+                
+                ap.setTexture(textura);
+                
 		obj = (Node)new com.sun.j3d.utils.geometry.Box(1f,1f,1f,ap);
                 
 		obj.setCapability(Node.ALLOW_AUTO_COMPUTE_BOUNDS_READ);
