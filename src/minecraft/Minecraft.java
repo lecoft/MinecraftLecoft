@@ -11,6 +11,7 @@ import java.awt.AWTEvent;
 import static java.awt.Frame.MAXIMIZED_BOTH;
 import java.awt.event.*;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import javax.media.j3d.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -20,8 +21,15 @@ public class Minecraft implements Runnable, ActionListener {
     
     private JProgressBar vida;
     private JLabel jugador;
-    private JButton menu,close;
-    private JPanel infoJugador,PanelMenu, game;
+    private JButton menu,close,dibuja;
+    JButton[] bloquecitos;
+    private JPanel infoJugador,PanelMenu, game, PanelDibujo;
+    boolean coordenadasOcupadas [][][] = new boolean [15][15][20]; 
+    JButton [][] botonesArreglo = new JButton [15][15];
+    BranchGroup objRoot;
+    BranchGroup Primero;
+    boolean primera=true;
+    JSlider js;
        
     Shape3D createLand() {
         LineArray landGeom = new LineArray(44, GeometryArray.COORDINATES | GeometryArray.COLOR_3);
@@ -109,7 +117,9 @@ public class Minecraft implements Runnable, ActionListener {
         vida.setValue(100);
         jugador = new JLabel("Nombre_Jugador");
         menu = new JButton("<<");
+        dibuja = new JButton("Dibuja");
         close = new JButton("X");
+        dibuja.addActionListener(this);
         menu.addActionListener(this);
         close.addActionListener(this);
         // p1.setPreferredSize(new Dimension(250,150));
@@ -117,23 +127,22 @@ public class Minecraft implements Runnable, ActionListener {
         infoJugador.setOpaque(false);
         JPanel estadisticas = new JPanel(new FlowLayout());
         JPanel botones = new JPanel(new FlowLayout());
-        estadisticas.add(jugador);
-        estadisticas.add(vida);
+        estadisticas.add(dibuja);
+        estadisticas.add(jugador);        
         infoJugador.add(estadisticas,BorderLayout.LINE_START);
         botones.add(menu);
         botones.add(close);       
         infoJugador.add(botones,BorderLayout.LINE_END);
-        JButton b1=new JButton("B1");
-        JButton b2=new JButton("B2");
-        JButton b3=new JButton("B3");
-        JButton b4=new JButton("B4");
-        JButton b5=new JButton("B5");
         
         
         PanelMenu = new JPanel(new GridBagLayout());
         PanelMenu.setVisible(false);
         
-        JPanel blocksGrid=new JPanel(new GridLayout(3,3));
+        PanelDibujo = new JPanel(new GridBagLayout());
+        PanelDibujo.setVisible(false);
+        
+        JPanel blocksGrid=new JPanel(new GridLayout(5,2));
+        JPanel pintaGrid=new JPanel(new GridLayout(15,15));
         
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 
@@ -152,13 +161,32 @@ public class Minecraft implements Runnable, ActionListener {
         simpleU.getViewingPlatform().setNominalViewingTransform();
 
         simpleU.addBranchGraph(scene);
+        
+        objRoot = new BranchGroup();
+    	Primero = new BranchGroup();
+    	Primero.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
+    	Primero.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
+    	Primero.setCapability(BranchGroup.ALLOW_DETACH);
+    	objRoot.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
+    	objRoot.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
+        simpleU.addBranchGraph(objRoot);
+        
+        
         new OtherView(simpleU.getLocale()); /* see note below */
         
-        blocksGrid.add(b1);
-        blocksGrid.add(b2);
-        blocksGrid.add(b3);
-        blocksGrid.add(b4);
-        blocksGrid.add(b5);
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 2; j++) {
+                blocksGrid.add(new JButton(i+""+j));
+            }
+        }
+        
+        for (int i = 0; i < 15; i++) {
+            for (int j = 0; j < 15; j++) {
+                botonesArreglo[i][j] = new JButton();
+                botonesArreglo[i][j].addActionListener(this);
+                pintaGrid.add(botonesArreglo[i][j]);
+            }
+        }
         
         c.fill=GridBagConstraints.HORIZONTAL;
         c.weightx=1;
@@ -172,14 +200,7 @@ public class Minecraft implements Runnable, ActionListener {
         c.gridx=0;
         c.gridy=1;
         game.add(canvas3D,c);
-        
-        c.fill=GridBagConstraints.NONE;
-        c.weightx=1;
-        c.weighty=1;
-        c.gridx=0;
-        c.gridy=0;
-        PanelMenu.add(blocksGrid,c);
-        
+        JScrollPane blocks=new JScrollPane(blocksGrid);
         
         JFrame f = new JFrame("Minecraft");
         
@@ -194,9 +215,30 @@ public class Minecraft implements Runnable, ActionListener {
         game.setSize(f.getSize());
         PanelMenu.setSize((int)f.getSize().getWidth()/5,(int)((f.getSize().getHeight()*5)/6));
         PanelMenu.setLocation((int)(f.getSize().getWidth()/5)*4, (int)((f.getSize().getHeight()/15)));
+        PanelDibujo.setLayout(new BorderLayout());
+        PanelDibujo.setSize((int)f.getSize().getWidth()*2/5,(int)((f.getSize().getHeight()*5)/6));
+        PanelDibujo.setLocation(0, (int)((f.getSize().getHeight()/15)));
+        blocks.setPreferredSize(new Dimension((int)(PanelMenu.getSize().getWidth()-20),(int)(PanelMenu.getSize().getHeight()-30)));
+        PanelMenu.add(blocks);
+        pintaGrid.setPreferredSize(new Dimension((int)(PanelDibujo.getSize().getWidth()-20),(int)(PanelDibujo.getSize().getHeight()-50)));
+        PanelDibujo.add(pintaGrid,BorderLayout.NORTH);
+
+        js=new JSlider(-10,10,0);
+        js.setMajorTickSpacing(1);
+        js.setPaintLabels(true);
+        
+        Hashtable tablaHash = new Hashtable();
+        tablaHash.put(new Integer(-10),new JLabel("-10"));
+        tablaHash.put(new Integer(0),new JLabel("0"));
+        tablaHash.put(new Integer(10),new JLabel("10"));
+        js.setLabelTable(tablaHash);
+        js.setPaintLabels(true);
+        
+        PanelDibujo.add(js,BorderLayout.SOUTH);
         
         lp.add(game,new Integer(1));
-        lp.add(PanelMenu, new Integer(2));        
+        lp.add(PanelMenu, new Integer(2));
+        lp.add(PanelDibujo, new Integer(2));
     }
 
    
@@ -210,6 +252,22 @@ public class Minecraft implements Runnable, ActionListener {
             PanelMenu.setVisible(false);
           else
             PanelMenu.setVisible(true);
+      }
+      else if(b == dibuja){
+          if(PanelDibujo.isVisible())
+            PanelDibujo.setVisible(false);
+          else
+            PanelDibujo.setVisible(true);
+      }
+      else{
+          for (int i = 0; i < 15; i++) {
+              for (int j = 0; j < 15; j++) {
+                  if(b==botonesArreglo[i][j]){
+                      coordenadasOcupadas[i][j][js.getValue()]=true;
+                      insertar(j-8,i-8);
+                  }
+              }
+          }
       }
         
     }
@@ -239,6 +297,49 @@ public class Minecraft implements Runnable, ActionListener {
             locale.addBranchGraph(vpRoot);
         }
     } 
+    
+    public void insertar(int x,int y)
+{
+		TransformGroup tg = new TransformGroup();
+		BranchGroup bg = new BranchGroup();
+		Node obj = null;
+		//activamos las capacidades necesarias
+		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+                tg.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
+                tg.setCapability(TransformGroup.ENABLE_PICK_REPORTING);
+		
+		//permitimos que el padre lo destruya
+		bg.setCapability(BranchGroup.ALLOW_DETACH);
+		
+		Appearance ap = new Appearance();
+		
+		obj = (Node)new com.sun.j3d.utils.geometry.Box(1f,1f,1f,ap);
+                
+		obj.setCapability(Node.ALLOW_AUTO_COMPUTE_BOUNDS_READ);
+		obj.setCapability(Node.ALLOW_BOUNDS_READ );
+		obj.setBoundsAutoCompute(true);	
+                
+                Transform3D t=new Transform3D();
+                Vector3f vec=new Vector3f(x*2f,js.getValue()*2f,y*2f);
+                t.setTranslation(vec);
+                
+                tg.setTransform(t);
+                
+		tg.addChild(obj);
+		bg.addChild(tg);
+		if(!primera)
+		{
+			objRoot.removeAllChildren();
+			Primero.addChild(bg);
+			objRoot.addChild(Primero);
+		}
+		else
+		{	
+			Primero.addChild(bg);
+			objRoot.addChild(Primero);
+	    		primera = false;
+	        }
+}
 
     public void run() {
 
