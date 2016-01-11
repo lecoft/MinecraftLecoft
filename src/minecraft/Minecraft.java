@@ -19,15 +19,17 @@ import java.util.Hashtable;
 import javax.imageio.ImageIO;
 import javax.media.j3d.*;
 import javax.swing.*;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.ChangeEvent;
-import javax.vecmath.*;
 import javax.swing.event.ChangeListener;
+import javax.vecmath.*;
 
 public class Minecraft implements ActionListener, ChangeListener {
 
     private JProgressBar vida;
-    private String textura = "Images\\textura (1).png";
+    //private String textura = "Images\\textura (1).png";
+    private int textura=0;
     private String NombreJugador = "Jugador1";
     private JLabel jugador;
     private JButton menu, close, dibuja;
@@ -42,6 +44,7 @@ public class Minecraft implements ActionListener, ChangeListener {
     JSlider js;
     JPanel pintaGrid;
     ArrayList<String> CoorUsadas = new ArrayList<>();
+    private Cliente cl;
 
 
     Shape3D createLand() {
@@ -110,6 +113,7 @@ public class Minecraft implements ActionListener, ChangeListener {
 
     public Minecraft() {
         NombreJugador = setJugador();
+        cl=new Cliente(networkSetUp(),this);
         vida = new JProgressBar();
         vida.setValue(100);
         jugador = new JLabel(NombreJugador);
@@ -137,7 +141,8 @@ public class Minecraft implements ActionListener, ChangeListener {
         PanelDibujo = new JPanel(new GridBagLayout());
         PanelDibujo.setVisible(false);
 
-        JPanel blocksGrid = new JPanel(new GridLayout(5, 2));
+        JPanel blocksGrid = new JPanel();
+        blocksGrid.setLayout(new BoxLayout(blocksGrid,BoxLayout.Y_AXIS));
         pintaGrid = new JPanel(new GridLayout(15, 15));
 
         GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
@@ -168,14 +173,6 @@ public class Minecraft implements ActionListener, ChangeListener {
         simpleU.addBranchGraph(objRoot);
 
         new OtherView(simpleU.getLocale()); /* see note below */
-
-        for (int i = 0; i < 20; i++) {
-            texturas[i] = new JButton();
-            texturas[i].setIcon(new ImageIcon("Images\\textura (" + (i + 1) + ").png"));
-            texturas[i].addActionListener(this);
-            blocksGrid.add(texturas[i]);
-        }
-
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         c.weighty = 0;
@@ -210,6 +207,15 @@ public class Minecraft implements ActionListener, ChangeListener {
         PanelMenu.add(blocks);
         pintaGrid.setPreferredSize(new Dimension((int) (PanelDibujo.getSize().getWidth() - 20), (int) (PanelDibujo.getSize().getHeight() - 50)));
         PanelDibujo.add(pintaGrid, BorderLayout.NORTH);
+        blocks.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
+
+        for (int i = 0; i < 20; i++) {
+            texturas[i] = new JButton();
+            texturas[i].setIcon(new ImageIcon("Images\\textura (" + (i + 1) + ").png"));
+            texturas[i].addActionListener(this);
+            texturas[i].setPreferredSize(new Dimension((int) (PanelMenu.getSize().getWidth() - 40),(int) (PanelMenu.getSize().getWidth() - 40)));
+            blocksGrid.add(texturas[i]);
+        }
 
         js = new JSlider(-10, 10, 0);
         js.addChangeListener(this);
@@ -257,7 +263,23 @@ public class Minecraft implements ActionListener, ChangeListener {
         } while (!continuar);
         return jugador;
     }
-
+    
+    public String networkSetUp() {
+        String ip;
+        String opciones[] = {"Aceptar"};
+        boolean continuar = false;
+        ImageIcon icon = new ImageIcon("Images\\icono.png");
+        do {
+            ip = (String) JOptionPane.showInputDialog(null, "Ingresa la ip del servidor", "Nickname", JOptionPane.INFORMATION_MESSAGE, icon, null, "localhost");
+            if (ip.length() > 0) {
+                continuar = true;
+            } else {
+                JOptionPane.showMessageDialog(null, "Debes de escribir una ip", "Error", JOptionPane.ERROR_MESSAGE);
+                continuar = false;
+            }
+        } while (!continuar);
+        return ip;
+    }
     public void actionPerformed(ActionEvent e) {
         JButton b = (JButton) e.getSource();
         if (b == close) {
@@ -287,14 +309,15 @@ public class Minecraft implements ActionListener, ChangeListener {
                             if (coordenadasOcupadas[i][j][js.getValue() + 10] == true) {
                                 botonesArreglo[i][j].setBackground(Color.RED);
                             }
-                            insertar(j - 8, i - 8);
+                            insertar(j - 8, i - 8,js.getValue(),textura);
                         }
+                        cl.escribeRed(i,j,js.getValue(),textura);
                     }
                 }
             }
             for (int i = 0; i < 20; i++) {
                 if (b == texturas[i]) {
-                    textura = texturas[i].getIcon().toString();
+                    textura = i;//texturas[i].getIcon().toString();
                 }
             }
         }
@@ -344,7 +367,7 @@ public class Minecraft implements ActionListener, ChangeListener {
         }
     }
 
-    public void insertar(int x, int y) {
+    public void insertar(int x, int y,int z, int te) {
         TransformGroup tg = new TransformGroup();
         BranchGroup bg = new BranchGroup();
         Node obj = null;
@@ -358,7 +381,7 @@ public class Minecraft implements ActionListener, ChangeListener {
 
         Appearance ap = new Appearance();
         ap.setCapability(Appearance.ALLOW_TEXTURE_WRITE);
-        TextureLoader tex = new TextureLoader(textura, null);
+        TextureLoader tex = new TextureLoader(texturas[te].getIcon().toString(), null);
         ap.setTexture(tex.getTexture());
 
         obj = (Node) new com.sun.j3d.utils.geometry.Box(1f, 1f, 1f, Primitive.GENERATE_TEXTURE_COORDS, ap);
@@ -368,7 +391,7 @@ public class Minecraft implements ActionListener, ChangeListener {
         obj.setBoundsAutoCompute(true);
 
         Transform3D t = new Transform3D();
-        Vector3f vec = new Vector3f(x * 2f, js.getValue() * 2f, y * 2f);
+        Vector3f vec = new Vector3f(x * 2f, z * 2f, y * 2f);
         t.setTranslation(vec);
 
         tg.setTransform(t);
@@ -376,15 +399,15 @@ public class Minecraft implements ActionListener, ChangeListener {
         tg.addChild(obj);
         bg.addChild(tg);
         if (!primera) {
-            objRoot.removeAllChildren();
+            //objRoot.removeAllChildren();
             Primero.addChild(bg);
-            objRoot.addChild(Primero);
+            //objRoot.addChild(Primero);
         } else {
             Primero.addChild(bg);
             objRoot.addChild(Primero);
             primera = false;
         }
-        CoorUsadas.add(x+","+y+","+js.getValue()); 
+        CoorUsadas.add(x+","+y+","+z); 
     }
 
     public void borra(int x, int y, int z) {
@@ -394,6 +417,21 @@ public class Minecraft implements ActionListener, ChangeListener {
                 CoorUsadas.remove(i);  
             }
         }       
+    }
+    
+    public void Update(int i, int j, int k,int t){
+        if(coordenadasOcupadas[i][j][k]){
+            borra(j - 8, i - 8,k);
+            coordenadasOcupadas[i][j][k+10] = false;
+            if(js.getValue()==k)
+                botonesArreglo[i][j].setBackground(Color.lightGray);
+        }
+        if(!coordenadasOcupadas[i][j][k]){
+            insertar(j - 8, i - 8,k,t);
+            coordenadasOcupadas[i][j][k+10] = true;
+            if(js.getValue()==k)
+                botonesArreglo[i][j].setBackground(Color.RED);
+        }
     }
 
     public static void main(String[] args) {
