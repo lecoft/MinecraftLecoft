@@ -420,13 +420,13 @@ public class Minecraft implements ActionListener, ChangeListener {
     }
     
     public void Update(int i, int j, int k,int t){
-        if(coordenadasOcupadas[i][j][k]){
+        if(coordenadasOcupadas[i][j][k+10]){
             borra(j - 8, i - 8,k);
             coordenadasOcupadas[i][j][k+10] = false;
             if(js.getValue()==k)
                 botonesArreglo[i][j].setBackground(Color.lightGray);
         }
-        if(!coordenadasOcupadas[i][j][k]){
+        else{
             insertar(j - 8, i - 8,k,t);
             coordenadasOcupadas[i][j][k+10] = true;
             if(js.getValue()==k)
